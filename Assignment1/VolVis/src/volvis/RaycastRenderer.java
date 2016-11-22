@@ -126,18 +126,12 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         for (int j = 0; j < image.getHeight(); j++) {
             for (int i = 0; i < image.getWidth(); i++) {
                 int val = 0;
-                /*int k = 0;
-                pixelCoord[0]=0;
-                pixelCoord[1]=0;
-                pixelCoord[2]=0;
-                while(!(pixelCoord[0] < 0 || pixelCoord[0] > volume.getDimX() || pixelCoord[1] < 0 || pixelCoord[1] > volume.getDimY()
-                        || pixelCoord[2] < 0 || pixelCoord[2] > volume.getDimZ())){
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2];                    
-                }*/
+                int step = 1;
+                if(interactiveMode){
+                    step = 3;
+                }
                 double maxRayLength = Math.sqrt(volume.getDimX()*volume.getDimX() + volume.getDimY()*volume.getDimY()+volume.getDimZ()*volume.getDimZ());
-                for(int k = 0; k<maxRayLength; k++){
+                for(int k = 0; k<maxRayLength; k+=step){
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k-maxRayLength/2)*viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1]+ (k-maxRayLength/2)*viewVec[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2]+ (k-maxRayLength/2)*viewVec[2]; 
