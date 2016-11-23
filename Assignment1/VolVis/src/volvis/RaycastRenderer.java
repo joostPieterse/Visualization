@@ -17,12 +17,15 @@ import util.VectorMath;
 import volume.GradientVolume;
 import volume.Volume;
 
+
+
+
 /**
  *
  * @author michel
  */
 public class RaycastRenderer extends Renderer implements TFChangeListener {
-
+    private RenderType renderType = RenderType.SLICER;
     private Volume volume = null;
     private GradientVolume gradients = null;
     RaycastRendererPanel panel;
@@ -67,6 +70,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         System.out.println("Finished initialization of RaycastRenderer");
     }
 
+    public void setRenderType(RenderType type){
+        renderType = type;
+    }
+    
     public RaycastRendererPanel getPanel() {
         return panel;
     }
@@ -295,8 +302,16 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         gl.glGetDoublev(GL2.GL_MODELVIEW_MATRIX, viewMatrix, 0);
 
         long startTime = System.currentTimeMillis();
-        mip(viewMatrix);    
-        
+        switch(renderType){
+            case SLICER:
+                slicer(viewMatrix);
+                break;
+            case MIP:
+                mip(viewMatrix);
+                break;
+            default:
+                slicer(viewMatrix);
+        }        
         long endTime = System.currentTimeMillis();
         double runningTime = (endTime - startTime);
         panel.setSpeedLabel(Double.toString(runningTime));
