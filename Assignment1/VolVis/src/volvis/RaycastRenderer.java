@@ -138,19 +138,23 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         double max = volume.getMaximum();
         TFColor voxelColor = new TFColor();
 
-        for (int j = 0; j < image.getHeight(); j++) {
-            for (int i = 0; i < image.getWidth(); i++) {
+        int step = 1;
+        if (interactiveMode) {
+            step = 2;
+        }
+        for (int j = 0; j < image.getHeight(); j += step) {
+            for (int i = 0; i < image.getWidth(); i += step) {
                 int val = 0;
-                int step = 1;
-                if (interactiveMode) {
-                    step = 3;
-                }
                 double maxRayLength = Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
-                for (int k = 0; k < maxRayLength; k += step) {
+                for (int k = 0; k < maxRayLength; k++) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
-                    val = Math.max(getVoxel(pixelCoord), val);
+                    if (interactiveMode) {
+                        val = Math.max(val, getVoxel(pixelCoord));
+                    } else {
+                        val = Math.max(val, getInterpolatedVoxel(pixelCoord));
+                    }
                 }
 
                 // Map the intensity to a grey value by linear scaling
@@ -167,7 +171,14 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
                 int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
                 int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
-                image.setRGB(i, j, pixelColor);
+                for (int k = 0; k < step; k++) {
+                    for (int g = 0; g < step; g++) {
+                        if (i + k < image.getWidth() && j + g < image.getHeight()) {
+                            image.setRGB(i + k, j + g, pixelColor);
+                        }
+                    }
+                }
+
             }
         }
 
