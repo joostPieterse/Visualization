@@ -144,24 +144,35 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
         for (int j = 0; j < image.getHeight(); j += step) {
             for (int i = 0; i < image.getWidth(); i += step) {
-                int val = 0;
                 double maxRayLength = Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
+                TFColor previousColor = new TFColor(0, 0, 0, 0);
                 for (int k = 0; k < maxRayLength; k++) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (maxRayLength / 2 - k) * viewVec[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (maxRayLength / 2 - k) * viewVec[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (maxRayLength / 2 - k) * viewVec[2];
+                    int alpha = 0;
                     if (interactiveMode) {
-                        val = Math.max(val, getVoxel(pixelCoord));
+                        alpha = getVoxel(pixelCoord);
                     } else {
-                        val = Math.max(val, getInterpolatedVoxel(pixelCoord));
+                        alpha = getInterpolatedVoxel(pixelCoord);
+                    }
+                    double red = alpha * tFunc.getColor(alpha).r + (1 - alpha) * previousColor.r;
+                    double green = alpha * tFunc.getColor(alpha).g + (1 - alpha) * previousColor.g;
+                    double blue = alpha * tFunc.getColor(alpha).b + (1 - alpha) * previousColor.b;
+                    previousColor.r = red;
+                    previousColor.g = green;
+                    previousColor.b = blue;
+                    previousColor.a = alpha;
+                    if(previousColor.a!=0){
+                    //System.out.println(previousColor.a);
                     }
                 }
 
                 // Map the intensity to a grey value by linear scaling
-                voxelColor.r = val / max;
-                voxelColor.g = voxelColor.r;
-                voxelColor.b = voxelColor.r;
-                voxelColor.a = val > 0 ? 1.0 : 0.0;  // this makes intensity 0 completely transparent and the rest opaque
+                voxelColor.r = previousColor.r / max;
+                voxelColor.g = previousColor.g / max;
+                voxelColor.b = previousColor.b / max;
+                voxelColor.a = previousColor.a / max;  // this makes intensity 0 completely transparent and the rest opaque
                 // Alternatively, apply the transfer function to obtain a color
                 // voxelColor = tFunc.getColor(val);
 
