@@ -267,6 +267,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
 
     }
+    
 
     void slicer(double[] viewMatrix) {
 
