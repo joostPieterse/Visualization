@@ -147,9 +147,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 double maxRayLength = Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
                 TFColor previousColor = new TFColor(0, 0, 0, 0);
                 for (int k = 0; k < maxRayLength; k++) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (maxRayLength / 2 - k) * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (maxRayLength / 2 - k) * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (maxRayLength / 2 - k) * viewVec[2];
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
                     int alpha = 0;
                     if (interactiveMode) {
                         alpha = getVoxel(pixelCoord);
@@ -157,22 +157,26 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         alpha = getInterpolatedVoxel(pixelCoord);
                     }
                     TFColor color = tFunc.getColor(alpha);
-                    double red = alpha / max * color.r + (1 - alpha / max ) * previousColor.r;
+                    /*double red = alpha / max * color.r + (1 - alpha / max ) * previousColor.r;
                     double green = alpha  / max * color.g + (1 - alpha / max ) * previousColor.g;
-                    double blue = alpha  / max * color.b + (1 - alpha / max ) * previousColor.b;
-                    previousColor.a = Math.max(previousColor.a, alpha);
+                    double blue = alpha  / max * color.b + (1 - alpha / max ) * previousColor.b;*/
+                    double red = previousColor.r + color.r * alpha / max * (1 - previousColor.a);
+                    double green = previousColor.g + color.g * alpha / max * (1 - previousColor.a);
+                    double blue = previousColor.b + color.b * alpha / max * (1 - previousColor.a);
+                    double newAlpha = previousColor.a + alpha / max * (1 - previousColor.a);
                     /*if(alpha!=0){
                     System.out.println("red "+red+" green "+green+" blue "+blue);
                     }*/
                     previousColor.r = red;
                     previousColor.g = green;
                     previousColor.b = blue;
+                    previousColor.a = newAlpha;
                 }
                 // Map the intensity to a grey value by linear scaling
                 voxelColor.r = previousColor.r;
                 voxelColor.g = previousColor.g;
                 voxelColor.b = previousColor.b;
-                voxelColor.a = 1.0;  
+                voxelColor.a = previousColor.a;  
 
                 // BufferedImage expects a pixel color packed as ARGB in an int
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
