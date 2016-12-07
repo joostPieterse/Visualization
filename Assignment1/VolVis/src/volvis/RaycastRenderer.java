@@ -111,6 +111,89 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 + ((1 - alpha) * (1 - beta) * (gamma) * x4) + ((alpha) * (1 - beta) * (gamma) * x5) + ((1 - alpha) * (beta) * (gamma) * x6) + ((alpha) * (beta) * (gamma) * x7));
     }
 
+    void transfer(double[] viewMatrix) {
+        // clear image
+        for (int j = 0; j < image.getHeight(); j++) {
+            for (int i = 0; i < image.getWidth(); i++) {
+                image.setRGB(i, j, 0);
+            }
+        }
+
+        // vector uVec and vVec define a plane through the origin, 
+        // perpendicular to the view vector viewVec
+        double[] viewVec = new double[3];
+        double[] uVec = new double[3];
+        double[] vVec = new double[3];
+        VectorMath.setVector(viewVec, viewMatrix[2], viewMatrix[6], viewMatrix[10]);
+        VectorMath.setVector(uVec, viewMatrix[0], viewMatrix[4], viewMatrix[8]);
+        VectorMath.setVector(vVec, viewMatrix[1], viewMatrix[5], viewMatrix[9]);
+        // image is square
+        int imageCenter = image.getWidth() / 2;
+
+        double[] pixelCoord = new double[3];
+        double[] volumeCenter = new double[3];
+        VectorMath.setVector(volumeCenter, volume.getDimX() / 2, volume.getDimY() / 2, volume.getDimZ() / 2);
+
+        // sample on a plane through the origin of the volume data
+        double max = volume.getMaximum();
+        TFColor voxelColor = new TFColor();
+
+        int step = 1;
+        if (interactiveMode) {
+            step = 3;
+        }
+        for (int j = 0; j < image.getHeight(); j += step) {
+            for (int i = 0; i < image.getWidth(); i += step) {
+                double maxRayLength = Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
+                double alphaProduct = 1;
+                for (int k = 0; k < maxRayLength; k++) {
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
+                    double intensity = 0;
+                    if (interactiveMode) {
+                        intensity = getVoxel(pixelCoord) / 255.0;
+                    } else {
+                        intensity = getInterpolatedVoxel(pixelCoord) / 255.0;
+                    }
+                    double alpha = tfEditor2D.triangleWidget.color.a;
+                    //System.out.println("x "+pixelCoord[0]+" y "+pixelCoord[1]+" z "+pixelCoord[2]);
+                    float gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]).mag;
+                    double r = tfEditor2D.triangleWidget.radius;
+                    double baseIntensity = tfEditor2D.triangleWidget.baseIntensity / 255.0;
+                    double resultAlpha = 0;
+                    if (gradient == 0 && intensity == baseIntensity) {
+                        resultAlpha = 1;
+                    } else if (gradient > 0 && intensity - r * gradient <= baseIntensity && intensity + r * gradient >= baseIntensity) {
+                        resultAlpha = alpha * (1 - (Math.abs(baseIntensity - intensity)) / (gradient * r));
+                    } else {
+                        resultAlpha = 0;
+                    }
+                    alphaProduct *= 1 - resultAlpha;
+                }
+                //System.out.println("alphaproduct: "+alphaProduct);
+                voxelColor.r = tfEditor2D.triangleWidget.color.r;
+                voxelColor.g = tfEditor2D.triangleWidget.color.g;
+                voxelColor.b = tfEditor2D.triangleWidget.color.b;
+                voxelColor.a = 1-alphaProduct;
+
+                // BufferedImage expects a pixel color packed as ARGB in an int
+                int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
+                int c_red = voxelColor.r <= 1.0 ? (int) Math.floor(voxelColor.r * 255) : 255;
+                int c_green = voxelColor.g <= 1.0 ? (int) Math.floor(voxelColor.g * 255) : 255;
+                int c_blue = voxelColor.b <= 1.0 ? (int) Math.floor(voxelColor.b * 255) : 255;
+                int pixelColor = (c_alpha << 24) | (c_red << 16) | (c_green << 8) | c_blue;
+                for (int k = 0; k < step; k++) {
+                    for (int g = 0; g < step; g++) {
+                        if (i + k < image.getWidth() && j + g < image.getHeight()) {
+                            image.setRGB(i + k, j + g, pixelColor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     void compositing(double[] viewMatrix) {
         // clear image
         for (int j = 0; j < image.getHeight(); j++) {
@@ -176,7 +259,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 voxelColor.r = previousColor.r;
                 voxelColor.g = previousColor.g;
                 voxelColor.b = previousColor.b;
-                voxelColor.a = previousColor.a;  
+                voxelColor.a = previousColor.a;
 
                 // BufferedImage expects a pixel color packed as ARGB in an int
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
@@ -267,7 +350,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
 
     }
-    
 
     void slicer(double[] viewMatrix) {
 
@@ -408,6 +490,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 break;
             case COMPOSITING:
                 compositing(viewMatrix);
+                break;
+            case TRANSFER:
+                transfer(viewMatrix);
                 break;
             default:
                 slicer(viewMatrix);
