@@ -16,6 +16,7 @@ import util.TFChangeListener;
 import util.VectorMath;
 import volume.GradientVolume;
 import volume.Volume;
+import volume.VoxelGradient;
 
 /**
  *
@@ -24,6 +25,7 @@ import volume.Volume;
 public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     private RenderType renderType = RenderType.SLICER;
+    private boolean shading = false;
     private Volume volume = null;
     private GradientVolume gradients = null;
     RaycastRendererPanel panel;
@@ -68,6 +70,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
     public void setRenderType(RenderType type) {
         renderType = type;
+    }
+
+    public void setShading(boolean shading) {
+        this.shading = shading;
     }
 
     public RaycastRendererPanel getPanel() {
@@ -146,6 +152,8 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
             for (int i = 0; i < image.getWidth(); i += step) {
                 double maxRayLength = Math.sqrt(volume.getDimX() * volume.getDimX() + volume.getDimY() * volume.getDimY() + volume.getDimZ() * volume.getDimZ());
                 double alphaProduct = 1;
+                double totalMultiplier = 1.0;
+                TFColor previousColor = new TFColor(tfEditor2D.triangleWidget.color.r, tfEditor2D.triangleWidget.color.g, tfEditor2D.triangleWidget.color.b, alphaProduct);
                 for (int k = 0; k < maxRayLength; k++) {
                     pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
                     pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
@@ -158,24 +166,53 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     }
                     double alpha = tfEditor2D.triangleWidget.color.a;
                     //System.out.println("x "+pixelCoord[0]+" y "+pixelCoord[1]+" z "+pixelCoord[2]);
-                    float gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]).mag/(float)max;
+                    VoxelGradient gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]);
+                    float gradientLength = gradient.mag / (float) max;
                     double r = tfEditor2D.triangleWidget.radius;
                     double baseIntensity = tfEditor2D.triangleWidget.baseIntensity / max;
                     double resultAlpha = 0;
-                    if (gradient == 0 && intensity == baseIntensity) {
+                    if (gradientLength == 0 && intensity == baseIntensity) {
                         resultAlpha = 1;
-                    } else if (gradient > 0 && intensity - r * gradient <= baseIntensity && intensity + r * gradient >= baseIntensity) {
-                        resultAlpha = alpha * (1 - (Math.abs(baseIntensity - intensity)) / (gradient * r));
+                    } else if (gradientLength > 0 && intensity - r * gradientLength <= baseIntensity && intensity + r * gradientLength >= baseIntensity) {
+                        resultAlpha = alpha * (1 - (Math.abs(baseIntensity - intensity)) / (gradientLength * r));
                     } else {
                         resultAlpha = 0;
+                    }
+                    if (shading) {
+                        double kAmbient = 0.1;
+                        double kDiff = 0.7;
+                        double kSpec = 0.2;
+                        int power = 10;
+
+                        double[] normal = {gradient.x / gradient.mag, gradient.y / gradient.mag, gradient.z / gradient.mag};
+                        double[] halfway = {2 * viewVec[0], 2 * viewVec[1], 2 * viewVec[2]};
+                        double halfwayLength = VectorMath.length(halfway);
+                        if (gradient.mag > 0) {
+                            halfway[0] /= halfwayLength;
+                            halfway[1] /= halfwayLength;
+                            halfway[2] /= halfwayLength;
+//                            System.out.println("normal: "+normal[0]+", "+normal[1]+", "+normal[2]);
+//                            System.out.println("halfway: "+halfway[0]+", "+halfway[1]+", "+halfway[2]);
+//                            System.out.println("before: " + resultAlpha);
+                            TFColor newColor = new TFColor();
+                            double diffuseMultiplier = kDiff * (Math.max(0, VectorMath.dotproduct(viewVec, normal)));
+                            double spec = kSpec * (Math.pow(Math.max(0, VectorMath.dotproduct(normal, halfway)), power));
+                            newColor.r = tfEditor2D.triangleWidget.color.r * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.r;
+                            newColor.g = tfEditor2D.triangleWidget.color.g * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.g;
+                            newColor.b = tfEditor2D.triangleWidget.color.b * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.b;
+                            previousColor.r = newColor.r * resultAlpha + previousColor.r * (1 - resultAlpha);
+                            previousColor.g = newColor.g * resultAlpha + previousColor.g * (1 - resultAlpha);
+                            previousColor.b = newColor.b * resultAlpha + previousColor.b * (1 - resultAlpha);
+//                            System.out.println("after: " + resultAlpha);
+                        }
                     }
                     alphaProduct *= 1 - resultAlpha;
                 }
                 //System.out.println("alphaproduct: "+alphaProduct);
-                voxelColor.r = tfEditor2D.triangleWidget.color.r;
-                voxelColor.g = tfEditor2D.triangleWidget.color.g;
-                voxelColor.b = tfEditor2D.triangleWidget.color.b;
-                voxelColor.a = 1-alphaProduct;
+                voxelColor.r = previousColor.r;
+                voxelColor.g = previousColor.g;
+                voxelColor.b = previousColor.b;
+                voxelColor.a = 1 - alphaProduct;
 
                 // BufferedImage expects a pixel color packed as ARGB in an int
                 int c_alpha = voxelColor.a <= 1.0 ? (int) Math.floor(voxelColor.a * 255) : 255;
