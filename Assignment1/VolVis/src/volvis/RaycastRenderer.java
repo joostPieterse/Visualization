@@ -158,7 +158,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     }
                     double alpha = tfEditor2D.triangleWidget.color.a;
                     //System.out.println("x "+pixelCoord[0]+" y "+pixelCoord[1]+" z "+pixelCoord[2]);
-                    float gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]).mag;
+                    float gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]).mag/(float)max;
                     double r = tfEditor2D.triangleWidget.radius;
                     double baseIntensity = tfEditor2D.triangleWidget.baseIntensity / 255.0;
                     double resultAlpha = 0;

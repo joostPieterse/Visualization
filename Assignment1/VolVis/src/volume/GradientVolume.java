@@ -62,9 +62,9 @@ public class GradientVolume {
         for (int x = 1; x < dimX-1; x++) {
             for (int y = 1; y < dimY-1; y++) {
                 for (int z = 1; z < dimZ-1; z++) {
-                    float formX = ((float)1/2)*((float)volume.getVoxel(x+1, y, z)/max - (float)volume.getVoxel(x-1, y, z)/max);
-                    float formY = ((float)1/2)*((float)volume.getVoxel(x, y+1, z)/max - (float)volume.getVoxel(x, y-1, z)/max);
-                    float formZ = ((float)1/2)*((float)volume.getVoxel(x, y, z+1)/max - (float)volume.getVoxel(x, y, z-1)/max);
+                    float formX = ((float)1/2)*((float)volume.getVoxel(x+1, y, z) - (float)volume.getVoxel(x-1, y, z));
+                    float formY = ((float)1/2)*((float)volume.getVoxel(x, y+1, z) - (float)volume.getVoxel(x, y-1, z));
+                    float formZ = ((float)1/2)*((float)volume.getVoxel(x, y, z+1) - (float)volume.getVoxel(x, y, z-1));
                     VoxelGradient voxelVector = new VoxelGradient(formX, formY, formZ);
                     setGradient(x, y, z, voxelVector);
                 }
