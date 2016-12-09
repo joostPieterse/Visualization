@@ -160,9 +160,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
                     double intensity = 0;
                     if (interactiveMode) {
-                        intensity = getVoxel(pixelCoord) / 255.0;
+                        intensity = getVoxel(pixelCoord) / max;
                     } else {
-                        intensity = getInterpolatedVoxel(pixelCoord) / 255.0;
+                        intensity = getInterpolatedVoxel(pixelCoord) / max;
                     }
                     double alpha = tfEditor2D.triangleWidget.color.a;
                     //System.out.println("x "+pixelCoord[0]+" y "+pixelCoord[1]+" z "+pixelCoord[2]);
@@ -171,8 +171,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     double r = tfEditor2D.triangleWidget.radius;
                     double baseIntensity = tfEditor2D.triangleWidget.baseIntensity / max;
                     double resultAlpha = 0;
-                    if (gradientLength == 0 && intensity == baseIntensity) {
-                        resultAlpha = 1;
+                    if (gradientLength > tfEditor2D.triangleWidget.maxGrad / (float)max || gradientLength < tfEditor2D.triangleWidget.minGrad / (float)max) {
+                        resultAlpha = 0;
+                    } else if (gradientLength == 0 && intensity == baseIntensity) {
+                        resultAlpha = alpha;
                     } else if (gradientLength > 0 && intensity - r * gradientLength <= baseIntensity && intensity + r * gradientLength >= baseIntensity) {
                         resultAlpha = alpha * (1 - (Math.abs(baseIntensity - intensity)) / (gradientLength * r));
                     } else {
@@ -195,11 +197,21 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 //                            System.out.println("halfway: "+halfway[0]+", "+halfway[1]+", "+halfway[2]);
 //                            System.out.println("before: " + resultAlpha);
                             TFColor newColor = new TFColor();
-                            double diffuseMultiplier = kDiff * (Math.max(0, VectorMath.dotproduct(viewVec, normal)));
-                            double spec = kSpec * (Math.pow(Math.max(0, VectorMath.dotproduct(normal, halfway)), power));
-                            newColor.r = tfEditor2D.triangleWidget.color.r * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.r;
-                            newColor.g = tfEditor2D.triangleWidget.color.g * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.g;
-                            newColor.b = tfEditor2D.triangleWidget.color.b * diffuseMultiplier + spec + kAmbient * tfEditor2D.triangleWidget.color.b;
+                            newColor.r = tfEditor2D.triangleWidget.color.r;
+                            newColor.g = tfEditor2D.triangleWidget.color.g;
+                            newColor.b = tfEditor2D.triangleWidget.color.b;
+                            if (VectorMath.dotproduct(viewVec, normal) >= 0) {
+                                double diffuseMultiplier = kDiff * (VectorMath.dotproduct(viewVec, normal));
+                                newColor.r = tfEditor2D.triangleWidget.color.r * diffuseMultiplier + kAmbient * tfEditor2D.triangleWidget.color.r;
+                                newColor.g = tfEditor2D.triangleWidget.color.g * diffuseMultiplier + kAmbient * tfEditor2D.triangleWidget.color.g;
+                                newColor.b = tfEditor2D.triangleWidget.color.b * diffuseMultiplier + kAmbient * tfEditor2D.triangleWidget.color.b;
+                            }
+                            if (VectorMath.dotproduct(normal, halfway) >= 0) {
+                                double spec = kSpec * (Math.pow(VectorMath.dotproduct(normal, halfway), power));
+                                newColor.r += spec;
+                                newColor.g += spec;
+                                newColor.b += spec;
+                            }
                             previousColor.r = newColor.r * resultAlpha + previousColor.r * (1 - resultAlpha);
                             previousColor.g = newColor.g * resultAlpha + previousColor.g * (1 - resultAlpha);
                             previousColor.b = newColor.b * resultAlpha + previousColor.b * (1 - resultAlpha);
