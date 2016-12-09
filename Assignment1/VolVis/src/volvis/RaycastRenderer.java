@@ -172,7 +172,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                     double baseIntensity = tfEditor2D.triangleWidget.baseIntensity / max;
                     double resultAlpha = 0;
                     if (gradientLength == 0 && intensity == baseIntensity) {
-                        resultAlpha = 1;
+                        resultAlpha = alpha;
                     } else if (gradientLength > 0 && intensity - r * gradientLength <= baseIntensity && intensity + r * gradientLength >= baseIntensity) {
                         resultAlpha = alpha * (1 - (Math.abs(baseIntensity - intensity)) / (gradientLength * r));
                     } else {
