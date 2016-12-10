@@ -146,7 +146,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         int step = 1;
         if (interactiveMode) {
-            step = 3;
+            step = 4;
         }
         for (int j = 0; j < image.getHeight(); j += step) {
             for (int i = 0; i < image.getWidth(); i += step) {
@@ -273,7 +273,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         int step = 1;
         if (interactiveMode) {
-            step = 3;
+            step = 4;
         }
         for (int j = 0; j < image.getHeight(); j += step) {
             for (int i = 0; i < image.getWidth(); i += step) {
@@ -357,7 +357,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
 
         int step = 1;
         if (interactiveMode) {
-            step = 2;
+            step = 4;
         }
         for (int j = 0; j < image.getHeight(); j += step) {
             for (int i = 0; i < image.getWidth(); i += step) {
