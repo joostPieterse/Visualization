@@ -155,9 +155,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 double totalMultiplier = 1.0;
                 TFColor previousColor = new TFColor(tfEditor2D.triangleWidget.color.r, tfEditor2D.triangleWidget.color.g, tfEditor2D.triangleWidget.color.b, alphaProduct);
                 for (int k = 0; k < maxRayLength; k++) {
-                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + (k - maxRayLength / 2) * viewVec[0];
-                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (k - maxRayLength / 2) * viewVec[1];
-                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (k - maxRayLength / 2) * viewVec[2];
+                    pixelCoord[0] = uVec[0] * (i - imageCenter) + vVec[0] * (j - imageCenter) + volumeCenter[0] + ( maxRayLength / 2-k) * viewVec[0];
+                    pixelCoord[1] = uVec[1] * (i - imageCenter) + vVec[1] * (j - imageCenter) + volumeCenter[1] + (maxRayLength / 2-k) * viewVec[1];
+                    pixelCoord[2] = uVec[2] * (i - imageCenter) + vVec[2] * (j - imageCenter) + volumeCenter[2] + (maxRayLength / 2-k) * viewVec[2];
                     double intensity = 0;
                     if (interactiveMode) {
                         intensity = getVoxel(pixelCoord) / max;
