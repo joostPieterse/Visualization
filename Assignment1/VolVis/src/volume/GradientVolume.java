@@ -58,7 +58,6 @@ public class GradientVolume {
         for (int i=0; i<data.length; i++) {
             data[i] = zero;
         }
-        short max = volume.getMaximum();
         for (int x = 1; x < dimX-1; x++) {
             for (int y = 1; y < dimY-1; y++) {
                 for (int z = 1; z < dimZ-1; z++) {

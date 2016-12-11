@@ -119,15 +119,18 @@ public class TransferFunction2DView extends javax.swing.JPanel {
                     }
                 } else if (selectedMaxGradControlPoint) {
                     dragEnd.setLocation(maxGradControlPoint.getCenterX(), dragEnd.y);
-                    if(dragEnd.y>minGradControlPoint.getCenterY()){
+                    //Maximum gradient must be larger than minimum
+                    if (dragEnd.y > minGradControlPoint.getCenterY()) {
                         dragEnd.y = (int) (minGradControlPoint.getCenterY() - 1);
                     }
                 } else if (selectedMinGradControlPoint) {
                     dragEnd.setLocation(minGradControlPoint.getCenterX(), dragEnd.y);
-                    if(dragEnd.y<maxGradControlPoint.getCenterY()){
+                    //Minimum gradient must be smaller than maximum
+                    if (dragEnd.y < maxGradControlPoint.getCenterY()) {
                         dragEnd.y = (int) (maxGradControlPoint.getCenterY() + 1);
                     }
                 }
+                //Keep lines within the widget
                 if (dragEnd.x < 0) {
                     dragEnd.x = 0;
                 }
