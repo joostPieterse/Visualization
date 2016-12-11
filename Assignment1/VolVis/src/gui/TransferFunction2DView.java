@@ -152,8 +152,6 @@ public class TransferFunction2DView extends javax.swing.JPanel {
                 } else if (selectedMinGradControlPoint) {
                     ed.triangleWidget.minGrad = ed.maxGradientMagnitude - dragEnd.y / ((h - DOTSIZE) / ed.maxGradientMagnitude);
                 }
-                System.out.println("maxgrad: " + ed.triangleWidget.maxGrad);
-                System.out.println("mingrad: " + ed.triangleWidget.minGrad);
                 ed.setSelectedInfo();
                 repaint();
             }

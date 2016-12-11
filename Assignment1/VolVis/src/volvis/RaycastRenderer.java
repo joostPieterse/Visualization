@@ -165,7 +165,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                         intensity = getInterpolatedVoxel(pixelCoord) / max;
                     }
                     double alpha = tfEditor2D.triangleWidget.color.a;
-                    //System.out.println("x "+pixelCoord[0]+" y "+pixelCoord[1]+" z "+pixelCoord[2]);
                     VoxelGradient gradient = gradients.getGradient((int) pixelCoord[0], (int) pixelCoord[1], (int) pixelCoord[2]);
                     float gradientLength = gradient.mag / (float) max;
                     double r = tfEditor2D.triangleWidget.radius;
@@ -194,9 +193,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                             halfway[0] /= halfwayLength;
                             halfway[1] /= halfwayLength;
                             halfway[2] /= halfwayLength;
-//                            System.out.println("normal: "+normal[0]+", "+normal[1]+", "+normal[2]);
-//                            System.out.println("halfway: "+halfway[0]+", "+halfway[1]+", "+halfway[2]);
-//                            System.out.println("before: " + resultAlpha);
                             TFColor newColor = new TFColor();
                             newColor.r = tfEditor2D.triangleWidget.color.r;
                             newColor.g = tfEditor2D.triangleWidget.color.g;
@@ -216,12 +212,10 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                             previousColor.r = newColor.r * resultAlpha + previousColor.r * (1 - resultAlpha);
                             previousColor.g = newColor.g * resultAlpha + previousColor.g * (1 - resultAlpha);
                             previousColor.b = newColor.b * resultAlpha + previousColor.b * (1 - resultAlpha);
-//                            System.out.println("after: " + resultAlpha);
                         }
                     }
                     alphaProduct *= 1 - resultAlpha;
                 }
-                //System.out.println("alphaproduct: "+alphaProduct);
                 voxelColor.r = previousColor.r;
                 voxelColor.g = previousColor.g;
                 voxelColor.b = previousColor.b;

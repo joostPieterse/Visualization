@@ -128,7 +128,6 @@ public class TransferFunction {
         for (int i = 1; i < controlPoints.size(); i++) {
             ControlPoint prev = controlPoints.get(i - 1);
             ControlPoint next = controlPoints.get(i);
-            //System.out.println(prev.value + " " + prev.color + " -- " + next.value + " " + next.color);
             double range = next.value - prev.value;
             for (int k = prev.value; k <= next.value; k++) {
                 double frac = (k - prev.value) / range;
