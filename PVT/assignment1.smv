@@ -1,0 +1,32 @@
+MODULE main
+VAR
+pr1 : process prc(pr2.st);
+pr2 : process prc(pr1.st);
+
+--Mutual Exclusion
+SPEC AG!((pr1.st = c) & (pr2.st = c))
+--Eventual Access
+SPEC AG((pr1.st = t) -> AF (pr1.st = c))
+--Non-Blocking
+SPEC AG((pr1.st = n) -> EX(pr1.st = t))
+
+--Assignment 1-1
+SPEC (pr1.st = t) -> AF (pr1.st = c)
+--Assignment 1-2
+SPEC (pr1.st = t) -> AF (pr1.st = c | pr2.st = c)
+--Assignment 1-3
+SPEC AG(pr1.st = n | pr1.st = t)
+
+
+MODULE prc(other-st)
+	VAR
+		st : {n, c, t};
+	ASSIGN
+		init(st) := n;
+		next(st) :=
+			case
+				(st = n) 					: {t, n};
+				(st = t) & !(other-st = c) 	: {c};
+				(st = c)					: {n};
+				TRUE : {st};
+			esac;
