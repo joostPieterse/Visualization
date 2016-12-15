@@ -11,9 +11,9 @@ SPEC AG((pr1.st = t) -> AF (pr1.st = c))
 SPEC AG((pr1.st = n) -> EX(pr1.st = t))
 
 --Assignment 1-1
-SPEC (pr1.st = t) -> AF (pr1.st = c)
+SPEC AG((pr1.st = t) -> AF (pr1.st = c))
 --Assignment 1-2
-SPEC (pr1.st = t) -> AF (pr1.st = c | pr2.st = c)
+SPEC AG((pr1.st = t) -> AF (pr1.st = c | pr2.st = c))
 --Assignment 1-3
 SPEC AG(pr1.st = n | pr1.st = t)
 
